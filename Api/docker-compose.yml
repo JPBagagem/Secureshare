@@ -1,0 +1,19 @@
+services:
+  app:
+    build: .
+    expose:
+      - "8000"
+
+  webserver:
+    image: nginx:latest
+    ports:
+      - "80:80"
+      - "443:443"
+    restart: always
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - ./certs/local.crt:/etc/nginx/certs/local.crt:ro
+      - ./certs/local.key:/etc/nginx/certs/local.key:ro
+    depends_on:
+      - app

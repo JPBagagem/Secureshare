@@ -1,0 +1,176 @@
+// SecureShare Database Schema
+// Generated from SQLAlchemy models
+
+Table "user" {
+  "id" INTEGER [pk, not null]
+  "user_name" VARCHAR(255) [not null, unique]
+  "blob" BYTES // Encrypted password vault data
+  "hash_password" VARCHAR(255) [not null]
+  "salt" VARCHAR(255)
+  "assymetric_public_key" VARCHAR(255)
+  "is_activated" BOOLEAN [default: false]
+  "last_login" TIMESTAMP
+}
+
+Table "role" {
+  "id" INTEGER [pk, not null]
+  "role" VARCHAR(255) [not null, unique, note: 'ADMINISTRATOR, SECURITY_OFFICER, TRUSTED_OFFICER, STANDARD_USER, AUDITOR']
+  "description" VARCHAR(255)
+}
+
+Table "clearance" {
+  "id" INTEGER [pk, not null]
+  "name" VARCHAR(255) [not null, unique]
+}
+
+Table "department" {
+  "id" INTEGER [pk, not null]
+  "name" VARCHAR(255) [not null, unique]
+  "created_at" TIMESTAMP [not null]
+  "created_by" INTEGER [not null, ref: > user.id]
+}
+
+Table "role_token" {
+  "id" INTEGER [pk, not null]
+  "user_id" INTEGER [ref: > user.id]
+  "role_id" INTEGER [ref: > role.id]
+  "department_id" INTEGER [ref: > department.id]
+  "issued_at" TIMESTAMP [not null]
+  "issued_by" INTEGER [not null, ref: > user.id]
+  "status" VARCHAR(20) [default: 'ACTIVE']
+  "signature" VARCHAR(500) [not null]
+}
+
+Table "role_revocation" {
+  "revoked_by" INTEGER [pk, not null, ref: > user.id]
+  "role_token" INTEGER [pk, not null, ref: > role_token.id]
+  "revoked_at" TIMESTAMP [not null]
+  "signature" VARCHAR(500) [not null]
+}
+
+Table "clearance_tokens" {
+  "id" INTEGER [pk, not null]
+  "user_id" INTEGER [not null, ref: > user.id]
+  "clearance_id" INTEGER [not null, ref: > clearance.id]
+  "expired_at" TIMESTAMP
+  "issued_at" TIMESTAMP [default: `CURRENT_TIMESTAMP`]
+  "issued_by" INTEGER [ref: > user.id]
+  "token_status" VARCHAR(20) [default: 'ACTIVE', note: 'ACTIVE, REVOKED, EXPIRED']
+  "signature" VARCHAR(500) [not null]
+  "token_data" TEXT
+}
+
+Table "clearance_departments" {
+  "clearance_token_id" INTEGER [pk, not null, ref: > clearance_tokens.id]
+  "department_id" INTEGER [pk, not null, ref: > department.id]
+}
+
+Table "clearance_revocations" {
+  "id" INTEGER [pk, not null, increment]
+  "clearance_token_id" INTEGER [not null, ref: > clearance_tokens.id]
+  "revoked_by" INTEGER [not null, ref: > user.id]
+  "revoked_at" TIMESTAMP [default: `CURRENT_TIMESTAMP`]
+  "reason" TEXT
+  "signature" TEXT [not null]
+
+  Indexes {
+    clearance_token_id
+    revoked_at
+  }
+}
+
+Table "file" {
+  "uid" VARCHAR(36) [pk, not null, note: 'UUID - Unique, unguessable identifier']
+  "file_name" VARCHAR(255) [not null]
+  "clearance_id" INTEGER [not null, ref: > clearance.id]
+  "reference_to_file" VARCHAR(255) [not null, unique]
+  "symetric_key_encrypted" TEXT
+  "tag_bytes" VARCHAR(255) [not null]
+  "iv_bytes" VARCHAR(255) [not null]
+  "expire_at" TIMESTAMP [not null]
+  "user_id" INTEGER [not null, ref: > user.id]
+  "is_private" BOOLEAN [not null]
+}
+
+Table "file_department" {
+  "file_uid" VARCHAR(36) [pk, not null, ref: > file.uid]
+  "department_id" INTEGER [pk, not null, ref: > department.id]
+}
+
+Table "encrypted_file_keys" {
+  "id" INTEGER [pk, not null, increment]
+  "recipient_user_id" INTEGER [ref: > user.id]
+  "file_uid" VARCHAR(36) [ref: > file.uid]
+  "encrypted_key" TEXT [not null]
+  "created_at" TIMESTAMP [default: `CURRENT_TIMESTAMP`]
+}
+
+Table "logs" {
+  "id" INTEGER [pk, not null]
+  "action" VARCHAR(255) [not null]
+  "time_stamp" TIMESTAMP [not null]
+  "description" TEXT [not null]
+  "user_id" INTEGER [not null, ref: > user.id]
+  "previous_hash" VARCHAR(64) [not null, note: 'Hash chain for audit integrity']
+  "current_hash" VARCHAR(64) [not null]
+  "check_by" INTEGER [ref: > user.id, note: 'Auditor who verified this log']
+  "check_at" TIMESTAMP
+  "signature" TEXT [note: 'Auditor signature for verification']
+}
+
+Table "revoked_tokens" {
+  "id" INTEGER [pk, not null]
+  "token" VARCHAR(500) [not null, unique]
+  "expires_at" TIMESTAMP [not null]
+
+  Indexes {
+    token
+    expires_at
+  }
+}
+
+// ============================
+// RELATIONSHIP REFERENCES
+// ============================
+
+// Department -> User (created_by)
+Ref "department_created_by_foreign": "department"."created_by" > "user"."id"
+
+// Role Token -> User, Role, Department
+Ref "role_token_user_id_foreign": "role_token"."user_id" > "user"."id"
+Ref "role_token_role_id_foreign": "role_token"."role_id" > "role"."id"
+Ref "role_token_department_id_foreign": "role_token"."department_id" > "department"."id"
+Ref "role_token_issued_by_foreign": "role_token"."issued_by" > "user"."id"
+
+// Role Revocation -> User, Role Token
+Ref "role_revocation_revoked_by_foreign": "role_revocation"."revoked_by" > "user"."id"
+Ref "role_revocation_role_token_foreign": "role_revocation"."role_token" > "role_token"."id"
+
+// Clearance Tokens -> User, Clearance
+Ref "clearance_tokens_user_id_foreign": "clearance_tokens"."user_id" > "user"."id"
+Ref "clearance_tokens_clearance_id_foreign": "clearance_tokens"."clearance_id" > "clearance"."id"
+Ref "clearance_tokens_issued_by_foreign": "clearance_tokens"."issued_by" > "user"."id"
+
+// Clearance Departments -> Clearance Tokens, Department
+Ref "clearance_departments_token_id_foreign": "clearance_departments"."clearance_token_id" > "clearance_tokens"."id"
+Ref "clearance_departments_department_id_foreign": "clearance_departments"."department_id" > "department"."id"
+
+// Clearance Revocations -> Clearance Tokens, User
+Ref "clearance_revocations_token_id_foreign": "clearance_revocations"."clearance_token_id" > "clearance_tokens"."id"
+Ref "clearance_revocations_revoked_by_foreign": "clearance_revocations"."revoked_by" > "user"."id"
+
+// File -> Clearance, User
+Ref "file_clearance_id_foreign": "file"."clearance_id" > "clearance"."id"
+Ref "file_user_id_foreign": "file"."user_id" > "user"."id"
+
+// File Department -> File, Department
+Ref "file_department_file_uid_foreign": "file_department"."file_uid" > "file"."uid"
+Ref "file_department_department_id_foreign": "file_department"."department_id" > "department"."id"
+
+// Encrypted File Keys -> User, File
+Ref "encrypted_file_keys_user_id_foreign": "encrypted_file_keys"."recipient_user_id" > "user"."id"
+Ref "encrypted_file_keys_file_uid_foreign": "encrypted_file_keys"."file_uid" > "file"."uid"
+
+// Logs -> User
+Ref "logs_user_id_foreign": "logs"."user_id" > "user"."id"
+Ref "logs_check_by_foreign": "logs"."check_by" > "user"."id"
