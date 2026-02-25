@@ -1,10 +1,8 @@
-[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/zUSHElJ8)
-
 # SecureShare
 
 A secure file sharing platform implementing **Multi-Level Security (MLS)** with the **Bell-LaPadula model**, **Role-Based Access Control (RBAC)**, and end-to-end encryption.
 
-## 🔐 Security Features
+## Security Features
 
 ### Multi-Level Security (Bell-LaPadula Model)
 - **Clearance Levels**: `UNCLASSIFIED` → `CONFIDENTIAL` → `SECRET` → `TOP_SECRET`
@@ -34,7 +32,7 @@ A secure file sharing platform implementing **Multi-Level Security (MLS)** with 
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 ├── Api/                          # Backend API
@@ -72,7 +70,7 @@ A secure file sharing platform implementing **Multi-Level Security (MLS)** with 
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 - Python 3.12+
@@ -122,7 +120,7 @@ python -m pytest test/unitTests/ -v
 
 ---
 
-## 📡 API Endpoints
+## API Endpoints
 
 ### Authentication
 | Method | Endpoint | Description |
@@ -175,7 +173,7 @@ python -m pytest test/unitTests/ -v
 
 ---
 
-## 💻 CLI Client Usage
+## CLI Client Usage
 
 The `simpleUi.py` provides a command-line interface for interacting with the API.
 
@@ -205,7 +203,7 @@ python3 simpleUi.py
 
 ---
 
-## 🔒 Security Model
+## Security Model
 
 ### File Upload (Write)
 ```
@@ -234,22 +232,8 @@ Each log entry contains:
 
 ---
 
-## 🧪 Test Coverage
-
-The test suite covers:
-- ✅ User authentication (login, logout, token revocation)
-- ✅ User management (create, activate, update)
-- ✅ Bell-LaPadula enforcement (no read up, no write down)
-- ✅ File upload with clearance validation
-- ✅ File sharing between users
-- ✅ Department-based access control
-- ✅ Trusted Officer bypass with reason
-- ✅ Role-based permissions (admin, auditor, etc.)
-
----
-
 ## 👥 Authors
 
-- **119636**
-- **120141**
+- **Luís Tojal** 
+- **José Bagagem**
 
