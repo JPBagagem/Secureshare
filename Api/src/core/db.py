@@ -106,7 +106,6 @@ def init_db():
                 memory_cost= 262144
             )
             aes_key = kdf.derive(admin_password.encode())
-            print(f"DEBUG_DB: AES Key: {aes_key.hex()}")
             
             cipher = Cipher(algorithms.AES(aes_key), modes.GCM(nonce))
             encryptor = cipher.encryptor()
@@ -114,7 +113,6 @@ def init_db():
             tag = encryptor.tag
             
             blob = salt + nonce + ciphertext + tag
-            print(f"DEBUG_DB: Blob: {blob.hex()}")
             
             admin_user.blob = blob
             session.add(admin_user)
@@ -145,7 +143,6 @@ def init_db():
             session.add(admin_role_token)
             session.commit()
             session.refresh(admin_role_token)
-            print(f"Admin role token created: {admin_role_token.id}")
 
         # --- AUDITOR USER ---
         auditor_user = session.exec(select(User).where(User.user_name == "auditor")).first()
@@ -228,7 +225,6 @@ def init_db():
             session.add(auditor_role_token)
             session.commit()
             session.refresh(auditor_role_token)
-            print(f"Auditor user created with AUDITOR role token: {auditor_role_token.id}")
 
         # --- AUTHENTICATED USER ---
         auth_user = session.exec(select(User).where(User.user_name == "authenticated_user")).first()
@@ -311,7 +307,6 @@ def init_db():
             session.add(auth_role_token)
             session.commit()
             session.refresh(auth_role_token)
-            print(f"Authenticated user created with STANDARD_USER role token: {auth_role_token.id}")
 
         # --- USER1 (STANDARD_USER with SECRET clearance) ---
         user1 = session.exec(select(User).where(User.user_name == "user1")).first()
@@ -394,7 +389,6 @@ def init_db():
             session.add(user1_role_token)
             session.commit()
             session.refresh(user1_role_token)
-            print(f"User1 created with STANDARD_USER role token: {user1_role_token.id}")
 
             # Create SECRET clearance token for user1
             # Signed by user1 themselves (self-issued clearance token)
@@ -422,7 +416,6 @@ def init_db():
             session.add(user1_clearance_token)
             session.commit()
             session.refresh(user1_clearance_token)
-            print(f"User1 created with SECRET clearance token: {user1_clearance_token.id}")
 
         # --- SECURITY OFFICER USER ---
         security_user = session.exec(select(User).where(User.user_name == "security")).first()
@@ -504,4 +497,3 @@ def init_db():
             session.add(security_role_token)
             session.commit()
             session.refresh(security_role_token)
-            print(f"Security user created with SECURITY_OFFICER role token: {security_role_token.id}")

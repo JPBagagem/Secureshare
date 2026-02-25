@@ -90,7 +90,6 @@ async def get_current_user_role(
                 return None
                 
         except (jwt.PyJWTError, ValueError) as e:
-            print("DEBUG: NOT AUTHORIZED")
             pass
 
         # 5. Verify the role token exists in DB (revocation check)
@@ -120,7 +119,6 @@ async def get_current_user_clearance(
 ) -> str | None:
     
     if not x_clearance_token:
-        print("DEBUG: No X-Clearance-Token header", flush=True)
         return None
 
     try:
@@ -144,7 +142,6 @@ async def get_current_user_clearance(
             return None
             
     except (jwt.PyJWTError, ValueError) as e:
-        print(f"DEBUG: JWT Error: {e}", flush=True)
         return None
 
     # 6. Verify the clearance token exists in DB (revocation check)
@@ -154,15 +151,9 @@ async def get_current_user_clearance(
     ).first()
     
     if not clearance_token:
-        print("DEBUG: Token not found in DB", flush=True)
-        # Debug DB content
-        all_tokens = session.exec(select(ClearanceTokens).where(ClearanceTokens.user_id == user.id)).all()
-        print(f"DEBUG: User tokens in DB: {[t.signature for t in all_tokens]}", flush=True)
-        print(f"DEBUG: Expected signature: {x_clearance_token}", flush=True)
         return None
         
     if clearance_token.token_status != TokenStatus.ACTIVE.value:
-        print(f"DEBUG: Token status is {clearance_token.token_status}", flush=True)
         return None
         
     return clearance_token

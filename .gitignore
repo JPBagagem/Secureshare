@@ -13,3 +13,7 @@ venv/
 **/uv.lock
 
 *_private_key
+*.pem
+database.db
+
+uploads
